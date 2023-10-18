@@ -2,6 +2,7 @@ package main
 
 // Import resty into your code and refer it as `resty`.
 import (
+	"flag"
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
@@ -11,8 +12,15 @@ const url = "https://apim-mckq3zpiubjie.azure-api.net/mock/get"
 const url1 = "https://httpbin.org/get"
 
 func main() {
+
+	var requests = flag.Int("r", 10, "Provide number of requests to send")
+	var targetUrl = flag.String("url", url, "Provide to send requests to")
+	flag.Parse()
+
+	fmt.Printf("Received flags requests:%v targetUrl:%v\n", *requests, *targetUrl)
+
 	// TestSingleGet()
-	TestParallel()
+	TestParallel(*targetUrl, *requests)
 }
 
 func TestSingleGet() {

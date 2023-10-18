@@ -20,7 +20,7 @@ const TrackingId = "x-ms-tracking-id"
 
 var eventHubCtx context.Context
 
-func TestParallel() {
+func TestParallel(targetUrl string, numberOfRequests int) {
 	fmt.Println("TestParallel: start time:", time.Now().UTC())
 
 	connStr := os.Getenv("EVENTHUB_CONNECTION_STRING")
@@ -37,13 +37,12 @@ func TestParallel() {
 	var wg sync.WaitGroup
 	// Create a Resty Client
 	client := GetRestyClient()
-	MakeRequest(client, url, hub)
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < numberOfRequests; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			MakeRequest(client, url, hub)
+			MakeRequest(client, targetUrl, hub)
 		}()
 	}
 	wg.Wait()
@@ -100,6 +99,9 @@ func MakeRequest(client *resty.Client, url string, hub *eventhub.Hub) {
 func GetRestyClient() *resty.Client {
 	// Create an HTTP/2 transport
 	tr := &http2.Transport{}
+	tr.CountError = func(errType string) {
+		fmt.Printf("ErrorType: %v\n", errType)
+	}
 
 	// Create an HTTP client with the transport
 	httpClient := &http.Client{
