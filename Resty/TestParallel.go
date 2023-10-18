@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
@@ -23,8 +22,7 @@ var eventHubCtx context.Context
 func TestParallel(targetUrl string, numberOfRequests int) {
 	fmt.Println("TestParallel: start time:", time.Now().UTC())
 
-	connStr := os.Getenv("EVENTHUB_CONNECTION_STRING")
-	hub, err := eventhub.NewHubFromConnectionString(connStr)
+	hub, err := eventhub.NewHubFromConnectionString(eventHubConnectionString)
 	if err != nil {
 		fmt.Println(err)
 		return

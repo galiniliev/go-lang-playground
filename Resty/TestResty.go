@@ -11,10 +11,16 @@ import (
 const url = "https://apim-mckq3zpiubjie.azure-api.net/mock/get"
 const url1 = "https://httpbin.org/get"
 
+var eventHubConnectionString string
+
 func main() {
 
 	var requests = flag.Int("r", 10, "Provide number of requests to send")
 	var targetUrl = flag.String("url", url, "Provide to send requests to")
+	var eventHubConnStrPtr = flag.String("eventHub", "", "Provide connection string for event hub")
+	eventHubConnectionString = *eventHubConnStrPtr
+	// := os.Getenv("EVENTHUB_CONNECTION_STRING")
+
 	flag.Parse()
 
 	fmt.Printf("Received flags requests:%v targetUrl:%v\n", *requests, *targetUrl)
