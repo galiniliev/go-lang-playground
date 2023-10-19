@@ -38,6 +38,6 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: ./Resty
-        file: ./Dockerfile
+        file: ./Resty/Dockerfile
         push: true
         tags: apimloadtest.azurecr.io/loadtestresty:latest
