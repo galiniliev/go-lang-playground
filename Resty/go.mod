@@ -1,6 +1,6 @@
 module HttpClient/TestResty
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/Azure/azure-event-hubs-go v1.3.1
