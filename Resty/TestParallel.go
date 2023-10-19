@@ -52,7 +52,7 @@ func TestParallel(targetUrl string, numberOfRequests int, eventHubConnString str
 
 		totalRequests += RequestBatchSize
 		fmt.Printf("Time:%v Total requests executed:%v\n", time.Now().UTC(), totalRequests)
-		time.Sleep(2 * time.Second)
+		time.Sleep(1 * time.Second)
 		if numberOfRequests > 0 && totalRequests >= numberOfRequests {
 			fmt.Printf("Exiting...")
 			return
