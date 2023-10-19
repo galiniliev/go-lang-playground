@@ -16,6 +16,7 @@ import (
 )
 
 const TrackingId = "x-ms-tracking-id"
+const RequestBacthSize = 100
 
 var eventHubCtx context.Context
 
@@ -37,14 +38,24 @@ func TestParallel(targetUrl string, numberOfRequests int, eventHubConnString str
 	// Create a Resty Client
 	client := GetRestyClient()
 
-	for i := 0; i < numberOfRequests; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			MakeRequest(client, targetUrl, hub)
-		}()
+	totalRequests := 0
+	for {
+		for i := 0; i < RequestBacthSize; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				MakeRequest(client, targetUrl, hub)
+			}()
+		}
+		wg.Wait()
+		totalRequests += RequestBacthSize
+		fmt.Printf("Time:%v Total requests executed:%v\n", time.Now().UTC(), totalRequests)
+		time.Sleep(1 * time.Second)
+		if numberOfRequests > 0 && totalRequests >= numberOfRequests {
+			fmt.Printf("Exiting...")
+			return
+		}
 	}
-	wg.Wait()
 }
 
 func MakeRequest(client *resty.Client, url string, hub *eventhub.Hub) {
