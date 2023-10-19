@@ -4,6 +4,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -15,12 +17,25 @@ var eventHubConnectionString string
 
 func main() {
 
-	var requests = flag.Int("r", 10, "Provide number of requests to send")
+	var requests = flag.Int("requests", 10, "Provide number of requests to send")
 	var targetUrl = flag.String("url", url, "Provide to send requests to")
 	var eventHubConnStrPtr = flag.String("eventHub", "", "Provide connection string for event hub")
 	eventHubConnectionString = *eventHubConnStrPtr
-	// := os.Getenv("EVENTHUB_CONNECTION_STRING")
 
+	requestsEnv, err := strconv.Atoi(os.Getenv("load-test-requests"))
+	if err == nil {
+		requests = &requestsEnv
+	}
+
+	var urlEnv = os.Getenv("load-test-url")
+	if urlEnv != "" {
+		targetUrl = &urlEnv
+	}
+
+	var eventHubEnv = os.Getenv("load-test-eventHub")
+	if urlEnv != "" {
+		eventHubConnectionString = eventHubEnv
+	}
 	flag.Parse()
 
 	fmt.Printf("Received flags requests:%v targetUrl:%v\n", *requests, *targetUrl)

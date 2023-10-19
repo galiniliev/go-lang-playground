@@ -1,41 +1,26 @@
-ARG ARG_EVENHUB=""
-ARG ARG_REQUESTS=10
-ARG ARG_URL=https://httpbin.org/get
-
-# ENV EVENTHUB_CONNECTION_STRING=event_hub_connection_here
-# ENV REQUESTS=10
-# ENV URL=https://httpbin.org/get
-
-ENV EVENTHUB_CONNECTION_STRING=ARG_EVENHUB
-ENV REQUESTS=ARG_REQUESTS
-ENV URL=ARG_URL
-
 # Use the official Golang image as the base image
 FROM golang:1.16-alpine AS build
 
-# Set the working directory to /app
+# Set destination for COPY
 WORKDIR /app
 
-# Copy the source code to the container
-COPY . .
+# Download Go modules
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Build the Golang program
-RUN go build -o TestResty.exe .
+# Copy the source code. Note the slash at the end, as explained in
+# https://docs.docker.com/engine/reference/builder/#copy
+COPY *.go ./
 
-# Use a minimal Alpine image as the base image for the final image
-FROM alpine:3.14
+# Build
+RUN CGO_ENABLED=0 GOOS=linux go build -o /http-loader
 
-# Copy the built binary from the previous stage
-COPY --from=build /app/TestResty.exe /app/TestResty.exe
-
-# Set the working directory to /app
-WORKDIR /app
-
-# Install any necessary dependencies
-RUN apk add --no-cache ca-certificates
-
-# Expose the port that the program listens on
+# Optional:
+# To bind to a TCP port, runtime parameters must be supplied to the docker command.
+# But we can document in the Dockerfile what ports
+# the application is going to listen on by default.
+# https://docs.docker.com/engine/reference/builder/#expose
 EXPOSE 8080
 
-# Start the program when the container starts
-CMD ["./TestResty.exe -r $REQUESTS -url $URL -eventHub $EVENTHUB_CONNECTION_STRING"]
+# Run
+CMD ["/http-loader"]
