@@ -1,0 +1,43 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+
+    - name: Build Go program
+      working-directory: ./Resty
+      run: go build -o TestResty.exe .
+
+    - name: Build Docker image
+      working-directory: ./Resty
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: myimage:latest
+        build-args: |
+          ARG_REQUESTS=10
+
+    - name: Deploy Docker image
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        script: |
+          docker pull myimage:latest
+          docker run -d -p 8080:8080 myimage:latest
