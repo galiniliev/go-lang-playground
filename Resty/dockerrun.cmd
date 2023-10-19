@@ -1,0 +1,1 @@
+docker run -p 8080:8080 -e load-test-requests=10000 58ad7606688e
