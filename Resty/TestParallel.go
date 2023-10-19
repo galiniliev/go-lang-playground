@@ -19,10 +19,11 @@ const TrackingId = "x-ms-tracking-id"
 
 var eventHubCtx context.Context
 
-func TestParallel(targetUrl string, numberOfRequests int) {
+func TestParallel(targetUrl string, numberOfRequests int, eventHubConnString string) {
 	fmt.Println("TestParallel: start time:", time.Now().UTC())
+	fmt.Printf("TestParallel: targetUrl:%v, numberOfRequests:%v eventHub:%v\n", targetUrl, numberOfRequests, eventHubConnString)
 
-	hub, err := eventhub.NewHubFromConnectionString(eventHubConnectionString)
+	hub, err := eventhub.NewHubFromConnectionString(eventHubConnString)
 	if err != nil {
 		fmt.Println(err)
 		return

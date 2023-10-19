@@ -20,7 +20,8 @@ func main() {
 	var requests = flag.Int("requests", 10, "Provide number of requests to send")
 	var targetUrl = flag.String("url", url, "Provide to send requests to")
 	var eventHubConnStrPtr = flag.String("eventHub", "", "Provide connection string for event hub")
-	eventHubConnectionString = *eventHubConnStrPtr
+	eventHubConnectionString := *eventHubConnStrPtr
+	flag.Parse()
 
 	requestsEnv, err := strconv.Atoi(os.Getenv("load-test-requests"))
 	if err == nil {
@@ -33,15 +34,15 @@ func main() {
 	}
 
 	var eventHubEnv = os.Getenv("load-test-eventHub")
-	if urlEnv != "" {
-		eventHubConnectionString = eventHubEnv
+	if eventHubConnectionString == "" && urlEnv != "" {
+		eventHubConnStrPtr = &eventHubEnv
 	}
-	flag.Parse()
 
-	fmt.Printf("Received flags requests:%v targetUrl:%v\n", *requests, *targetUrl)
+	fmt.Printf("Received env requests:%v targetUrl:%v eventHubConnStrPtr:%v\n", requestsEnv, urlEnv, eventHubEnv)
+	fmt.Printf("Received flags requests:%v targetUrl:%v eventHubConnStrPtr:%v\n", *requests, *targetUrl, *eventHubConnStrPtr)
 
 	// TestSingleGet()
-	TestParallel(*targetUrl, *requests)
+	TestParallel(*targetUrl, *requests, *eventHubConnStrPtr)
 }
 
 func TestSingleGet() {
