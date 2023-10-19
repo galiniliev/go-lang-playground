@@ -26,7 +26,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource env 'Microsoft.App/managedEnvironments@2022-01-01-preview' = {
+resource env 'Microsoft.App/managedEnvironments@2023-05-01' = {
   name: acaName
   location: location
   properties: {

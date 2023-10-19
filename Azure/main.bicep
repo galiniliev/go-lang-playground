@@ -1,3 +1,6 @@
+// az deployment group create --resource-group test-aca --template-file main.bicep --parameters @main.parameters.json
+// az account set --subscription "00f9e387-4d2a-4d2d-8113-785d5827878f"
+
 param location string = resourceGroup().location
 
 // ---------------------------------------------------------------------------------------------
