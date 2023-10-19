@@ -23,7 +23,6 @@ jobs:
       run: go build -o TestResty.exe .
 
     - name: Build the Docker image
-      uses: actions/checkout@v2
       working-directory: ./Resty
       run: docker build . --file Dockerfile --tag loadtestresty:$(date +%s)
 
