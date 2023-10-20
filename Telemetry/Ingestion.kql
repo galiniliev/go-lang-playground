@@ -1,0 +1,59 @@
+
+RequestsView
+| where Timestamp > ago(5m)
+| summarize count() by RequestUrl
+
+ 
+
+.alter  function 
+    with (view=true, docstring='View requests with expanded Trace', folder='Helpers')  
+    RequestsView() { 
+    Requests
+| extend TraceP = parse_json(Trace)
+| project Timestamp, TrackingId, RequestUrl,Protocol,
+    DNSLookupMs = todouble(TraceP.DNSLookup / (1000 * 1000)), 
+    ConnTimeMs = todouble(TraceP.ConnTime / (1000 * 1000)), 
+    TLSHandshakeMs = todouble(TraceP.TLSHandshake / (1000 * 1000)), 
+    ServerTime = todouble(TraceP.ServerTime / (1000 * 1000)), 
+    ResponseTimeMs = TraceP.ResponseTime / (1000 * 1000), 
+    TotalTimeMs = todouble(TraceP.TotalTime / (1000 * 1000)),
+    IsConnReused = tobool(TraceP.IsConnReused),
+    IsConnWasIdle = tobool(TraceP.IsConnWasIdle),
+    RequestAttempt = TraceP.RequestAttempt,
+    RemoteAddr = tostring(TraceP.RemoteAddr.IP)
+ }
+ 
+ // type TaceEntry struct {
+// 	Timestamp time.Time
+// 	Level int
+// 	Message string
+// 	Properties interface{}
+// }
+ 
+.create table Events (Timestamp:datetime, TrackingId:guid, Level:int, Message:string, Properties:dynamic) 
+
+ 
+ Events
+ | order by Timestamp desc 
+ | take 100
+ 
+ .show ingestion failures
+ 
+ .show ingestion mappings 
+ 
+ .show 
+ 
+ // Alter table command
+////////////////////////////////////////////////////////////
+.alter-merge table ['Events'] (['Timestamp']:datetime, ['TrackingId']:guid, ['Level']:int, ['Message']:string, ['Properties']:dynamic)
+
+// Ingestion Batching Policy Alter Command
+////////////////////////////////////////////////////////////
+.alter table ['Events'] policy ingestionbatching @'{"MaximumBatchingTimeSpan":"00:00:30"}'
+
+// Create mapping command
+////////////////////////////////////////////////////////////
+.create table ['Events'] ingestion json mapping 'Events_mapping' '[{"column":"Timestamp", "Properties":{"Path":"$[\'Timestamp\']"}},{"column":"TrackingId", "Properties":{"Path":"$[\'TrackingId\']"}},{"column":"Level", "Properties":{"Path":"$[\'Level\']"}},{"column":"Message", "Properties":{"Path":"$[\'Message\']"}},{"column":"Properties", "Properties":{"Path":"$[\'Properties\']"}}]'
+
+.drop table ['Events'] ingestion json mapping 'Events_mapping' 
+
