@@ -21,3 +21,15 @@ type HttpLogInfo struct {
 
 	Trace resty.TraceInfo
 }
+
+type TaceEntry struct {
+	Timestamp time.Time
+
+	TrackingId string
+
+	Level int
+
+	Message string
+
+	Properties interface{}
+}

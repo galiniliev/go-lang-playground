@@ -16,23 +16,27 @@ import (
 )
 
 const TrackingId = "x-ms-tracking-id"
-const RequestBatchSize = 100
+const RequestBatchSize = 10
 
 var eventHubCtx context.Context
+var eventHub *eventhub.Hub
 
 func TestParallel(targetUrl string, numberOfRequests int, eventHubConnString string) {
 	fmt.Println("TestParallel: start time:", time.Now().UTC())
 	fmt.Printf("TestParallel: targetUrl:%v, numberOfRequests:%v eventHub:%v\n", targetUrl, numberOfRequests, eventHubConnString)
 
-	hub, err := eventhub.NewHubFromConnectionString(eventHubConnString)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	if eventHubConnString != "" {
+		hub, err := eventhub.NewHubFromConnectionString(eventHubConnString)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	eventHubCtx = ctx
-	defer cancel()
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		eventHubCtx = ctx
+		eventHub = hub
+		defer cancel()
+	}
 
 	// Create a Resty Client
 	client := GetRestyClient()
@@ -45,13 +49,33 @@ func TestParallel(targetUrl string, numberOfRequests int, eventHubConnString str
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				MakeRequest(client, targetUrl, hub)
+				MakeRequest(client, targetUrl)
 			}()
 		}
 		wg.Wait()
 
 		totalRequests += RequestBatchSize
 		fmt.Printf("Time:%v Total requests executed:%v\n", time.Now().UTC(), totalRequests)
+		trace := TaceEntry{
+			Timestamp: time.Now().UTC(),
+			Level:     4,
+			Message:   fmt.Sprintf("Time:%v Total requests executed:%v\n", time.Now().UTC(), totalRequests),
+			Properties: map[string]interface{}{
+				"Batch":            RequestBatchSize,
+				"TotalRequests":    totalRequests,
+				"NumberOfRequests": numberOfRequests,
+			},
+		}
+
+		traceString, err := json.Marshal(trace)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		var logData = string(traceString)
+		LogEvent("Events", logData, "Events_mapping")
+
 		time.Sleep(1 * time.Second)
 		if numberOfRequests > 0 && totalRequests >= numberOfRequests {
 			fmt.Printf("Exiting...")
@@ -60,7 +84,7 @@ func TestParallel(targetUrl string, numberOfRequests int, eventHubConnString str
 	}
 }
 
-func MakeRequest(client *resty.Client, url string, hub *eventhub.Hub) {
+func MakeRequest(client *resty.Client, url string) {
 	var trackingId = uuid.New().String()
 	var start = time.Now()
 	resp, err := client.R().
@@ -71,6 +95,7 @@ func MakeRequest(client *resty.Client, url string, hub *eventhub.Hub) {
 	//fmt.Printf("TrackingId: %v, Status Code: %v, Duration:%v\n", trackingId, resp.StatusCode(), duration)
 
 	if err != nil {
+		LogError(trackingId, err)
 		fmt.Println("Error:", err)
 	} else {
 		// defer resp.Body.Close()
@@ -88,7 +113,7 @@ func MakeRequest(client *resty.Client, url string, hub *eventhub.Hub) {
 		Trace:         resp.Request.TraceInfo(),
 	}
 
-	fmt.Printf("TrackingId: %v, Trace: %+v\n", trackingId, httpTrace.Trace)
+	fmt.Printf("TrackingId: %v, Trace: %+v\n", trackingId, httpTrace)
 
 	traceString, err := json.Marshal(httpTrace)
 	if err != nil {
@@ -97,27 +122,69 @@ func MakeRequest(client *resty.Client, url string, hub *eventhub.Hub) {
 	}
 
 	var logData = string(traceString)
-
-	// send a single message into a random partition
-	err = hub.Send(eventHubCtx, eventhub.NewEventFromString(logData))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	LogEvent("Requests", logData, "Requests_mapping")
 
 	// fmt.Printf("%v, %v \n", time.Now().UTC(), logData)
 }
 
+func LogEvent(table string, logData string, mapping string) {
+	// send a single message into a random partition
+	if eventHub != nil {
+		event := eventhub.NewEventFromString(logData)
+		event.Properties = make(map[string]interface{})
+		event.Properties["Table"] = table
+		event.Properties["IngestionMappingReference"] = mapping
+
+		err := eventHub.Send(eventHubCtx, event)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+}
+
+func LogError(trackingId string, err error) {
+	trace := TaceEntry{
+		Timestamp: time.Now().UTC(),
+		Level:     2,
+		Message:   fmt.Sprintf("Error:%v", err),
+		Properties: map[string]interface{}{
+			"err": err,
+		},
+	}
+
+	traceString, err := json.Marshal(trace)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	var logData = string(traceString)
+	LogEvent("Events", logData, "Events_mapping")
+}
+
 func GetRestyClient() *resty.Client {
 	// Create an HTTP/2 transport
-	tr := &http2.Transport{}
-	tr.CountError = func(errType string) {
+	transport := &http2.Transport{
+		AllowHTTP: true,
+		// DialTLS: func(ctx context.Context, network, addr string) (net.Conn, error) {
+		// 	// Create a new unencrypted connection.
+		// 	conn, err := net.Dial(network, addr)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+
+		// 	// Return the connection.
+		// 	return conn, nil
+		// },
+	}
+	transport.CountError = func(errType string) {
 		fmt.Printf("ErrorType: %v\n", errType)
 	}
 
 	// Create an HTTP client with the transport
 	httpClient := &http.Client{
-		Transport: tr,
+		Transport: transport,
 	}
 
 	restyClient := resty.NewWithClient(httpClient).

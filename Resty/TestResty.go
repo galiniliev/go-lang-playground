@@ -10,13 +10,20 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-const url = "https://apim-mckq3zpiubjie.azure-api.net/mock/get"
-const url1 = "https://httpbin.org/get"
+const url1 = "https://galin-test-prod-1.azure-api.net/mock/get"
+const url2 = "https://apim-mckq3zpiubjie.azure-api.net/mock/get"
+const url = "https://httpbin.org/get"
 
 var eventHubConnectionString string
 
 func main() {
+	targetUrl, requests, eventHubConnStr := ConfigureFlags()
 
+	//TestSingleGet()
+	TestParallel(targetUrl, requests, eventHubConnStr)
+}
+
+func ConfigureFlags() (string, int, string) {
 	var requests = flag.Int("requests", 10, "Provide number of requests to send")
 	var targetUrl = flag.String("url", url, "Provide to send requests to")
 	var eventHubConnStrPtr = flag.String("eventHub", "", "Provide connection string for event hub")
@@ -41,8 +48,7 @@ func main() {
 	fmt.Printf("Received env requests:%v targetUrl:%v eventHubConnStrPtr:%v\n", requestsEnv, urlEnv, eventHubEnv)
 	fmt.Printf("Received flags requests:%v targetUrl:%v eventHubConnStrPtr:%v\n", *requests, *targetUrl, *eventHubConnStrPtr)
 
-	// TestSingleGet()
-	TestParallel(*targetUrl, *requests, *eventHubConnStrPtr)
+	return *targetUrl, *requests, *eventHubConnStrPtr
 }
 
 func TestSingleGet() {
