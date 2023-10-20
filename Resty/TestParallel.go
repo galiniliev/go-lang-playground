@@ -4,19 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"sync"
 	"time"
 
 	eventhub "github.com/Azure/azure-event-hubs-go"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
-
-	"golang.org/x/net/http2"
 )
 
 const TrackingId = "x-ms-tracking-id"
-const RequestBatchSize = 10
+const RequestBatchSize = 300
 
 var eventHubCtx context.Context
 var eventHub *eventhub.Hub
@@ -164,30 +161,7 @@ func LogError(trackingId string, err error) {
 }
 
 func GetRestyClient() *resty.Client {
-	// Create an HTTP/2 transport
-	transport := &http2.Transport{
-		AllowHTTP: true,
-		// DialTLS: func(ctx context.Context, network, addr string) (net.Conn, error) {
-		// 	// Create a new unencrypted connection.
-		// 	conn, err := net.Dial(network, addr)
-		// 	if err != nil {
-		// 		return nil, err
-		// 	}
-
-		// 	// Return the connection.
-		// 	return conn, nil
-		// },
-	}
-	transport.CountError = func(errType string) {
-		fmt.Printf("ErrorType: %v\n", errType)
-	}
-
-	// Create an HTTP client with the transport
-	httpClient := &http.Client{
-		Transport: transport,
-	}
-
-	restyClient := resty.NewWithClient(httpClient).
+	restyClient := resty.New().
 		EnableTrace()
 
 	// Registering Request Middleware
