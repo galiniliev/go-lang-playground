@@ -69,7 +69,7 @@ var shared_config = [
   }
   {
     name: 'load-test-eventHub'
-    value: azureEventHubConnectionString
+    secretRef: 'load-test-eventHub'
   }
 ]
 
@@ -84,5 +84,6 @@ module loadTest 'container_app.bicep' = {
     containerAppEnvironmentId: env.outputs.id
     registry: azureContainerRegistryName
     envVars: shared_config
+    azureEventHubConnectionString: azureEventHubConnectionString
   }
 }

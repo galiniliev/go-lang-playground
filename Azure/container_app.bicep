@@ -9,6 +9,8 @@ param maxReplicas int = 1
 param registryUsername string
 @secure()
 param registryPassword string
+@secure()
+param azureEventHubConnectionString string
 
 resource containerApp 'Microsoft.App/containerApps@2023-05-01' ={
   name: name
@@ -21,6 +23,10 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' ={
         {
           name: 'container-registry-password'
           value: registryPassword
+        }
+        {
+          name: 'load-test-eventHub'
+          value: azureEventHubConnectionString
         }
       ]      
       registries: [
