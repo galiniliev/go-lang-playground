@@ -25,7 +25,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' ={
           value: registryPassword
         }
         {
-          name: 'load-test-eventHub'
+          name: 'load-test-eventhub'
           value: azureEventHubConnectionString
         }
       ]      

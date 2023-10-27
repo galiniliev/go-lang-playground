@@ -46,19 +46,7 @@ module env 'environment.bicep' = {
 }
 
 // create the various config pairs
-var shared_config = [
-  {
-    name: 'ASPNETCORE_ENVIRONMENT'
-    value: 'Development'
-  }
-  {
-    name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-    value: env.outputs.appInsightsInstrumentationKey
-  }
-  {
-    name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-    value: env.outputs.appInsightsConnectionString
-  } 
+var env_config = [
   {
     name: 'load-test-requests'
     value: '0'
@@ -69,7 +57,7 @@ var shared_config = [
   }
   {
     name: 'load-test-eventHub'
-    secretRef: 'load-test-eventHub'
+    secretRef: 'load-test-eventhub'
   }
 ]
 
@@ -83,7 +71,7 @@ module loadTest 'container_app.bicep' = {
     registryUsername: azureContainerRegistryUserName
     containerAppEnvironmentId: env.outputs.id
     registry: azureContainerRegistryName
-    envVars: shared_config
+    envVars: env_config
     azureEventHubConnectionString: azureEventHubConnectionString
   }
 }
