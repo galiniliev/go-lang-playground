@@ -1,0 +1,1 @@
+![Main branch workflow](https://github.com/galiniliev/go-lang-playground/actions/workflows/main.yml/badge.svg)
