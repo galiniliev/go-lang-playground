@@ -73,7 +73,7 @@ func TestParallel(targetUrl string, numberOfRequests int, eventHubConnString str
 		var logData = string(traceString)
 		LogEvent("Events", logData, "Events_mapping")
 
-		time.Sleep(1 * time.Second)
+		// time.Sleep(1 * time.Second)
 		if numberOfRequests > 0 && totalRequests >= numberOfRequests {
 			fmt.Printf("Exiting...")
 			return
@@ -110,7 +110,7 @@ func MakeRequest(client *resty.Client, url string) {
 		Trace:         resp.Request.TraceInfo(),
 	}
 
-	fmt.Printf("TrackingId: %v, Trace: %+v\n", trackingId, httpTrace)
+	// fmt.Printf("TrackingId: %v, Trace: %+v\n", trackingId, httpTrace)
 
 	traceString, err := json.Marshal(httpTrace)
 	if err != nil {
