@@ -93,7 +93,7 @@ func MakeRequest(client *resty.Client, url string) {
 
 	if err != nil {
 		LogError(trackingId, err)
-		fmt.Println("Error:", err)
+		fmt.Println("Error resty.Get():", err)
 	} else {
 		// defer resp.Body.Close()
 		// fmt.Printf("Status Code: %v , Proto: %v, TotalTime:%v, TrackingId:%v\n",
@@ -114,7 +114,7 @@ func MakeRequest(client *resty.Client, url string) {
 
 	traceString, err := json.Marshal(httpTrace)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error in json.Marshal:", err)
 		return
 	}
 
@@ -134,7 +134,7 @@ func LogEvent(table string, logData string, mapping string) {
 
 		err := eventHub.Send(eventHubCtx, event)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Error in eventHub.Send():", err)
 			return
 		}
 	}
@@ -152,7 +152,7 @@ func LogError(trackingId string, err error) {
 
 	traceString, err := json.Marshal(trace)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error in json.Marshal:", err)
 		return
 	}
 
