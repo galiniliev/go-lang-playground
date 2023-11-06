@@ -15,7 +15,6 @@ import (
 const TrackingId = "x-ms-tracking-id"
 const RequestBatchSize = 300
 
-var eventHubCtx context.Context
 var eventHub *eventhub.Hub
 
 func TestParallel(targetUrl string, numberOfRequests int, eventHubConnString string) {
@@ -29,10 +28,7 @@ func TestParallel(targetUrl string, numberOfRequests int, eventHubConnString str
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-		eventHubCtx = ctx
 		eventHub = hub
-		defer cancel()
 	}
 
 	// Create a Resty Client
@@ -131,6 +127,9 @@ func LogEvent(table string, logData string, mapping string) {
 		event.Properties = make(map[string]interface{})
 		event.Properties["Table"] = table
 		event.Properties["IngestionMappingReference"] = mapping
+
+		eventHubCtx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+		defer cancel()
 
 		err := eventHub.Send(eventHubCtx, event)
 		if err != nil {
