@@ -4,6 +4,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -18,6 +20,8 @@ var eventHubConnectionString string
 
 func main() {
 	targetUrl, requests, eventHubConnStr := ConfigureFlags()
+
+	StartHttpServer()
 
 	//TestSingleGet()
 	TestParallel(targetUrl, requests, eventHubConnStr)
@@ -49,6 +53,23 @@ func ConfigureFlags() (string, int, string) {
 	fmt.Printf("Received flags requests:%v targetUrl:%v eventHubConnStrPtr:%v\n", *requests, *targetUrl, *eventHubConnStrPtr)
 
 	return *targetUrl, *requests, *eventHubConnStrPtr
+}
+
+func StartHttpServer() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Echo: %s\n", r.URL.Path)
+	})
+
+	go func() {
+		if err := http.ListenAndServe(":80", nil); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	fmt.Println("Started http server.")
+	// fmt.Println("Started http server. Press Enter to stop.")
+	// var input string
+	// fmt.Scanln(&input)
 }
 
 func TestSingleGet() {
