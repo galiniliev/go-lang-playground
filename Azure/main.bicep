@@ -73,5 +73,7 @@ module loadTest 'container_app.bicep' = {
     registry: azureContainerRegistryName
     envVars: env_config
     azureEventHubConnectionString: azureEventHubConnectionString
+    minReplicas: 10
+    maxReplicas: 15
   }
 }
