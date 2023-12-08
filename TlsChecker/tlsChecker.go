@@ -34,6 +34,7 @@ func main() {
 
 	fmt.Println("Response Status Code:", resp.StatusCode)
 	fmt.Println("TLS version:", resp.tlsVersion)
+	fmt.Println("Remote Address:", resp.RemoteAddr)
 	fmt.Println("Response Body:", resp.ResponseBody)
 	fmt.Println("DNSLookupDuration:", resp.DNSLookupDuration)
 	fmt.Println("ConnTime:", resp.ConnTime)
@@ -100,6 +101,7 @@ func SendRequest(url string, maxTlsVersion string, timeoutInSeconds int) (*Respo
 		TCPConnTime:       ti.TCPConnTime,
 		TLSHandshake:      ti.TLSHandshake,
 		ServerTime:        ti.ServerTime,
+		RemoteAddr:        conn.RemoteAddr().String(),
 	}
 
 	return response, nil
@@ -115,6 +117,8 @@ type ResponseDetails struct {
 	url string
 
 	tlsVersion string
+
+	RemoteAddr string
 
 	ResponseBody string
 
